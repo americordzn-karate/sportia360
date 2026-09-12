@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="SPORT-IA 360 - Sistema inteligente para liderazgo, toma de decisiones y cultura organizacional deportiva.">
+<title>SPORT-IA 360 | Inteligencia Gerencial Deportiva</title>
+
+<style>
+:root{
+  --bg:#f4f6f8;
+  --panel:#ffffff;
+  --text:#17202a;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --primary:#111827;
+  --accent:#d4a72c;
+  --accent-dark:#a87f13;
+  --success:#198754;
+  --warning:#e09b16;
+  --danger:#c0392b;
+  --info:#2563eb;
+  --sidebar:250px;
+  --shadow:0 8px 24px rgba(15,23,42,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+button,input,select,textarea{font:inherit}
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:var(--sidebar);
+  background:#101318;
+  color:#fff;
+  position:fixed;
+  inset:0 auto 0 0;
+  z-index:20;
+  padding:22px 16px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:4px 10px 25px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+.logo{
+  width:42px;height:42px;border-radius:10px;
+  background:var(--accent);color:#111;
+  display:grid;place-items:center;font-weight:900;
+}
+.brand strong{display:block;font-size:16px;letter-spacing:.4px}
+.brand span{display:block;font-size:10px;color:#aeb4bd;margin-top:3px}
+.nav{margin-top:22px}
+.nav button{
+  width:100%;border:0;background:transparent;color:#b9bec7;
+  padding:12px 13px;margin:3px 0;border-radius:9px;
+  text-align:left;cursor:pointer;font-weight:600;
+  display:flex;gap:11px;align-items:center;
+}
+.nav button:hover,.nav button.active{background:#242a32;color:#fff}
+.nav button.active{box-shadow:inset 3px 0 0 var(--accent)}
+.sidebar-footer{
+  position:absolute;left:20px;right:20px;bottom:20px;
+  font-size:11px;color:#777f8a;line-height:1.5;
+}
+.main{margin-left:var(--sidebar);width:calc(100% - var(--sidebar))}
+.topbar{
+  height:70px;background:#fff;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 30px;position:sticky;top:0;z-index:10;
+}
+.topbar h1{font-size:19px;margin:0}
+.topbar small{color:var(--muted)}
+.profile{display:flex;align-items:center;gap:12px}
+.avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:#e8eaed;display:grid;place-items:center;font-weight:800;
+}
+.content{padding:28px;max-width:1500px;margin:auto}
+.page{display:none}
+.page.active{display:block}
+.hero{
+  background:linear-gradient(120deg,#111318,#252b33);
+  color:#fff;border-radius:16px;padding:26px 28px;
+  display:flex;justify-content:space-between;gap:25px;
+  box-shadow:var(--shadow);margin-bottom:24px;
+}
+.hero h2{margin:0 0 8px;font-size:26px}
+.hero p{margin:0;color:#c9ced5;max-width:760px;line-height:1.55}
+.hero-badge{
+  min-width:170px;border-left:1px solid #555;
+  padding-left:22px;display:flex;flex-direction:column;justify-content:center;
+}
+.hero-badge strong{font-size:28px;color:var(--accent)}
+.hero-badge span{font-size:11px;color:#c9ced5}
+.section-title{
+  display:flex;justify-content:space-between;align-items:center;
+  margin:26px 0 13px;
+}
+.section-title h3{margin:0;font-size:16px}
+.section-title span{font-size:12px;color:var(--muted)}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(4,1fr)}
+.card{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:13px;padding:19px;box-shadow:var(--shadow);
+}
+.kpi-label{font-size:12px;color:var(--muted);font-weight:700}
+.kpi-value{font-size:30px;font-weight:800;margin:8px 0 5px}
+.delta{font-size:11px;font-weight:700}
+.up{color:var(--success)}.down{color:var(--danger)}
+.two{grid-template-columns:1.4fr 1fr}
+.three{grid-template-columns:repeat(3,1fr)}
+.chart-card{min-height:315px}
+.chart-wrap{height:240px;position:relative}
+svg{width:100%;height:100%;overflow:visible}
+.axis{stroke:#dfe3e8;stroke-width:1}
+.line-main{fill:none;stroke:#111827;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.line-accent{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.area{fill:rgba(212,167,44,.12)}
+.legend{display:flex;gap:18px;font-size:11px;color:var(--muted);margin-top:8px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:#111827}
+.dot.gold{background:var(--accent)}
+.progress{height:8px;background:#eef0f2;border-radius:99px;overflow:hidden;margin:9px 0 5px}
+.progress > span{height:100%;display:block;background:var(--accent);border-radius:99px}
+.metric-row{margin:15px 0}
+.metric-head{display:flex;justify-content:space-between;font-size:12px;font-weight:700}
+.alert{
+  border-left:4px solid;padding:13px 14px;margin:10px 0;
+  background:#fafafa;border-radius:7px;
+}
+.alert.warning{border-color:var(--warning)}
+.alert.danger{border-color:var(--danger)}
+.alert.info{border-color:var(--info)}
+.alert strong{font-size:13px}
+.alert p{font-size:12px;color:var(--muted);margin:5px 0 0;line-height:1.45}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:13px 10px;border-bottom:1px solid var(--line)}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+.badge{
+  display:inline-flex;padding:5px 8px;border-radius:99px;
+  font-size:10px;font-weight:800;
+}
+.badge.green{background:#e7f6ee;color:#137344}
+.badge.yellow{background:#fff4dc;color:#966300}
+.badge.red{background:#fde9e7;color:#a52f25}
+.badge.blue{background:#e9f0ff;color:#2455ad}
+.btn{
+  border:0;border-radius:8px;padding:9px 13px;cursor:pointer;
+  font-weight:700;font-size:12px;
+}
+.btn-primary{background:#111827;color:#fff}
+.btn-gold{background:var(--accent);color:#111}
+.btn-light{background:#f1f3f5;color:#333}
+.btn:hover{filter:brightness(.96)}
+.filters{display:flex;gap:9px;flex-wrap:wrap}
+select,input,textarea{
+  border:1px solid var(--line);border-radius:8px;
+  padding:9px 11px;background:#fff;color:var(--text);
+}
+.ai-box{
+  background:#111827;color:#fff;border-radius:13px;padding:22px;
+}
+.ai-header{display:flex;justify-content:space-between;align-items:center}
+.ai-title{display:flex;align-items:center;gap:10px}
+.ai-icon{
+  width:34px;height:34px;background:var(--accent);color:#111;
+  border-radius:9px;display:grid;place-items:center;font-weight:900;
+}
+.ai-box p{color:#d0d4da;font-size:13px;line-height:1.55}
+.recommendation{
+  background:#242a32;border:1px solid #3b424c;border-radius:9px;
+  padding:14px;margin-top:12px;
+}
+.recommendation strong{color:var(--accent);font-size:12px}
+.recommendation div{font-size:12px;line-height:1.5;margin-top:5px}
+.decision-form{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:13px;
+}
+.full{grid-column:1/-1}
+label{font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:5px}
+textarea{width:100%;min-height:100px;resize:vertical}
+.footer-note{text-align:center;color:#8a919b;font-size:10px;margin:30px 0 10px}
+.toast{
+  position:fixed;right:25px;bottom:25px;background:#111827;color:#fff;
+  padding:13px 17px;border-radius:9px;box-shadow:var(--shadow);
+  transform:translateY(100px);opacity:0;transition:.3s;z-index:50;font-size:12px;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.mobile-menu{display:none}
+@media(max-width:1050px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .two,.three{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .sidebar{transform:translateX(-100%);transition:.25s}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;width:100%}
+  .mobile-menu{display:block;background:none;border:0;font-size:23px;cursor:pointer}
+  .topbar{padding:0 17px}
+  .content{padding:17px}
+  .hero{flex-direction:column}
+  .hero-badge{border-left:0;border-top:1px solid #555;padding:15px 0 0}
+  .kpis{grid-template-columns:1fr}
+  .decision-form{grid-template-columns:1fr}
+  .full{grid-column:auto}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="logo">S</div>
+    <div>
+      <strong>SPORT-IA 360</strong>
+      <span>INTELIGENCIA GERENCIAL</span>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="active" onclick="showPage('dashboard',this)">◈ &nbsp; Dashboard ejecutivo</button>
+    <button onclick="showPage('liderazgo',this)">◎ &nbsp; Liderazgo</button>
+    <button onclick="showPage('cultura',this)">◌ &nbsp; Cultura organizacional</button>
+    <button onclick="showPage('ia',this)">✦ &nbsp; Inteligencia artificial</button>
+    <button onclick="showPage('decisiones',this)">▤ &nbsp; Decisiones estratégicas</button>
+    <button onclick="showPage('programas',this)">◇ &nbsp; Programas deportivos</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    Prototipo académico<br>
+    Instituto Municipal para el Desarrollo Deportivo<br>
+    v1.0 · 2026
+  </div>
+</aside>
+
+<main class="main">
+<header class="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <button class="mobile-menu" onclick="toggleMenu()">☰</button>
+    <div>
+      <h1 id="pageTitle">Dashboard ejecutivo</h1>
+      <small>Centro de inteligencia para la gestión deportiva</small>
+    </div>
+  </div>
+  <div class="profile">
+    <div style="text-align:right">
+      <strong style="font-size:12px">Dirección General</strong><br>
+      <small>IMDE</small>
+    </div>
+    <div class="avatar">DG</div>
+  </div>
+</header>
+
+<div class="content">
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="page active">
+  <div class="hero">
+    <div>
+      <h2>Buenos días, Dirección General</h2>
+      <p>SPORT-IA 360 integra indicadores deportivos, administrativos y humanos para transformar datos dispersos en información estratégica y recomendaciones accionables.</p>
+    </div>
+    <div class="hero-badge">
+      <strong>82/100</strong>
+      <span>Índice global de gestión</span>
+    </div>
+  </div>
+
+  <div class="grid kpis">
+    <div class="card">
+      <div class="kpi-label">Índice de liderazgo</div>
+      <div class="kpi-value">84.6</div>
+      <div class="delta up">▲ 6.8% vs. periodo anterior</div>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Retención de usuarios</div>
+      <div class="kpi-value">87.2%</div>
+      <div class="delta up">▲ 4.1% vs. periodo anterior</div>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Incidencias críticas</div>
+      <div class="kpi-value">12</div>
+      <div class="delta down">▼ 18.7% vs. periodo anterior</div>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Decisiones con evidencia</div>
+      <div class="kpi-value">89%</div>
+      <div class="delta up">▲ 14.2% vs. periodo anterior</div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <h3>Desempeño estratégico</h3>
+    <span>Últimas 12 semanas</span>
+  </div>
+
+  <div class="grid two">
+    <div class="card chart-card">
+      <div class="kpi-label">Evolución de gestión y liderazgo</div>
+      <div class="chart-wrap">
+        <svg viewBox="0 0 700 230" preserveAspectRatio="none">
+          <line class="axis" x1="35" y1="25" x2="680" y2="25"/>
+          <line class="axis" x1="35" y1="80" x2="680" y2="80"/>
+          <line class="axis" x1="35" y1="135" x2="680" y2="135"/>
+          <line class="axis" x1="35" y1="190" x2="680" y2="190"/>
+          <polygon class="area" points="35,165 95,155 155,160 215,140 275,125 335,130 395,105 455,112 515,85 575,75 635,65 680,52 680,190 35,190"/>
+          <polyline class="line-main" points="35,165 95,155 155,160 215,140 275,125 335,130 395,105 455,112 515,85 575,75 635,65 680,52"/>
+          <polyline class="line-accent" points="35,178 95,170 155,168 215,157 275,149 335,145 395,132 455,125 515,118 575,100 635,95 680,82"/>
+        </svg>
+      </div>
+      <div class="legend"><span><i class="dot"></i>Gestión global</span><span><i class="dot gold"></i>Liderazgo</span></div>
+    </div>
+
+    <div class="card">
+      <div class="kpi-label">Distribución de alertas</div>
+      <div class="metric-row">
+        <div class="metric-head"><span>Operativas</span><span>8</span></div>
+        <div class="progress"><span style="width:66%"></span></div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-head"><span>Personal</span><span>5</span></div>
+        <div class="progress"><span style="width:42%"></span></div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-head"><span>Usuarios</span><span>4</span></div>
+        <div class="progress"><span style="width:34%"></span></div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-head"><span>Financieras</span><span>2</span></div>
+        <div class="progress"><span style="width:17%"></span></div>
+      </div>
+      <button class="btn btn-light" style="margin-top:10px" onclick="showPage('ia',document.querySelectorAll('.nav button')[3])">Analizar alertas con IA</button>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <h3>Alertas prioritarias</h3>
+    <span>Actualización automática</span>
+  </div>
+  <div class="grid three">
+    <div class="card alert warning">
+      <strong>Disminución de asistencia</strong>
+      <p>La Escuela de Voleibol registra una caída del 17% durante las últimas seis semanas.</p>
+    </div>
+    <div class="card alert danger">
+      <strong>Riesgo de clima laboral</strong>
+      <p>Se detecta incremento de comentarios relacionados con comunicación interna.</p>
+    </div>
+    <div class="card alert info">
+      <strong>Oportunidad de crecimiento</strong>
+      <p>La demanda de atletismo supera en 24% la capacidad disponible actual.</p>
+    </div>
+  </div>
+</section>
+
+<!-- LIDERAZGO -->
+<section id="liderazgo" class="page">
+  <div class="section-title">
+    <h3>Índice de Efectividad Gerencial</h3>
+    <span>Evaluación trimestral</span>
+  </div>
+
+  <div class="grid three">
+    <div class="card">
+      <div class="kpi-label">IEG global</div>
+      <div class="kpi-value">84.6</div>
+      <div class="progress"><span style="width:84.6%"></span></div>
+      <small style="color:var(--muted)">Nivel: alto</small>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Comunicación</div>
+      <div class="kpi-value">88</div>
+      <div class="progress"><span style="width:88%"></span></div>
+      <small style="color:var(--muted)">Fortaleza principal</small>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Delegación</div>
+      <div class="kpi-value">73</div>
+      <div class="progress"><span style="width:73%"></span></div>
+      <small style="color:var(--muted)">Área de oportunidad</small>
+    </div>
+  </div>
+
+  <div class="section-title"><h3>Dimensiones del liderazgo</h3></div>
+  <div class="card">
+    <div class="metric-row">
+      <div class="metric-head"><span>Claridad de objetivos</span><span>91%</span></div>
+      <div class="progress"><span style="width:91%"></span></div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-head"><span>Comunicación estratégica</span><span>88%</span></div>
+      <div class="progress"><span style="width:88%"></span></div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-head"><span>Reconocimiento</span><span>82%</span></div>
+      <div class="progress"><span style="width:82%"></span></div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-head"><span>Delegación</span><span>73%</span></div>
+      <div class="progress"><span style="width:73%"></span></div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-head"><span>Retroalimentación</span><span>79%</span></div>
+      <div class="progress"><span style="width:79%"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CULTURA -->
+<section id="cultura" class="page">
+  <div class="hero">
+    <div>
+      <h2>Cultura organizacional</h2>
+      <p>El sistema analiza encuestas, comentarios y retroalimentación para detectar cambios en la percepción del personal.</p>
+    </div>
+    <div class="hero-badge">
+      <strong>78/100</strong>
+      <span>Índice de cultura saludable</span>
+    </div>
+  </div>
+
+  <div class="grid three">
+    <div class="card">
+      <div class="kpi-label">Compromiso</div>
+      <div class="kpi-value">86%</div>
+      <span class="badge green">Favorable</span>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Confianza</div>
+      <div class="kpi-value">81%</div>
+      <span class="badge green">Favorable</span>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Comunicación interna</div>
+      <div class="kpi-value">69%</div>
+      <span class="badge yellow">Atención</span>
+    </div>
+  </div>
+
+  <div class="section-title"><h3>Lectura cualitativa de la organización</h3></div>
+  <div class="card">
+    <div class="alert info">
+      <strong>Hallazgo de IA</strong>
+      <p>En las últimas cuatro semanas aumentaron las menciones relacionadas con coordinación entre áreas. La tendencia aparece principalmente en los equipos de entrenadores y coordinación operativa.</p>
+    </div>
+    <div class="alert warning">
+      <strong>Recomendación</strong>
+      <p>Realizar una reunión interáreas con agenda estructurada y establecer un protocolo digital para comunicar cambios de horarios, instalaciones y eventos.</p>
+    </div>
+  </div>
+</section>
+
+<!-- IA -->
+<section id="ia" class="page">
+  <div class="ai-box">
+    <div class="ai-header">
+      <div class="ai-title">
+        <div class="ai-icon">✦</div>
+        <div>
+          <strong>SPORT-IA ANALYTICS</strong><br>
+          <small style="color:#aeb4bd">Motor de apoyo a decisiones</small>
+        </div>
+      </div>
+      <span class="badge green">SISTEMA ACTIVO</span>
+    </div>
+
+    <p>El motor analiza indicadores históricos, datos operativos y señales cualitativas para identificar riesgos, oportunidades y posibles cursos de acción. Las recomendaciones son auxiliares: la decisión final corresponde al gerente.</p>
+
+    <div class="recommendation">
+      <strong>RECOMENDACIÓN #001 · PRIORIDAD ALTA</strong>
+      <div>La disminución de asistencia en Voleibol coincide con un aumento de incidencias operativas. Antes de ampliar presupuesto publicitario, se recomienda analizar horarios, disponibilidad del entrenador y satisfacción de los usuarios.</div>
+    </div>
+
+    <div class="recommendation">
+      <strong>OPORTUNIDAD #002 · PRIORIDAD MEDIA</strong>
+      <div>Atletismo presenta demanda superior a la capacidad instalada. Se recomienda evaluar la ampliación de horarios antes de crear un nuevo grupo.</div>
+    </div>
+
+    <button class="btn btn-gold" style="margin-top:15px" onclick="runAI()">Ejecutar nuevo análisis</button>
+  </div>
+
+  <div class="section-title"><h3>Flujo de inteligencia organizacional</h3></div>
+  <div class="grid four">
+    <div class="card"><strong>01 · Datos</strong><p style="font-size:12px;color:var(--muted)">Recopilación cuantitativa y cualitativa.</p></div>
+    <div class="card"><strong>02 · Análisis</strong><p style="font-size:12px;color:var(--muted)">Identificación de tendencias y anomalías.</p></div>
+    <div class="card"><strong>03 · Recomendación</strong><p style="font-size:12px;color:var(--muted)">Generación de alternativas accionables.</p></div>
+    <div class="card"><strong>04 · Aprendizaje</strong><p style="font-size:12px;color:var(--muted)">Comparación entre decisión y resultado.</p></div>
+  </div>
+</section>
+
+<!-- DECISIONES -->
+<section id="decisiones" class="page">
+  <div class="section-title">
+    <h3>Bitácora de decisiones estratégicas</h3>
+    <button class="btn btn-gold" onclick="openDecisionForm()">+ Registrar decisión</button>
+  </div>
+
+  <div class="card" id="decisionForm" style="display:none;margin-bottom:16px">
+    <h3 style="font-size:15px;margin-top:0">Nueva decisión estratégica</h3>
+    <div class="decision-form">
+      <div>
+        <label>Área</label>
+        <select id="dArea"><option>Escuelas deportivas</option><option>Infraestructura</option><option>Administración</option><option>Alto rendimiento</option></select>
+      </div>
+      <div>
+        <label>Prioridad</label>
+        <select id="dPriority"><option>Alta</option><option>Media</option><option>Baja</option></select>
+      </div>
+      <div class="full">
+        <label>Problema identificado</label>
+        <input id="dProblem" style="width:100%" placeholder="Describa el problema...">
+      </div>
+      <div class="full">
+        <label>Decisión tomada</label>
+        <textarea id="dDecision" placeholder="Describa la decisión y sus fundamentos..."></textarea>
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="saveDecision()">Guardar decisión</button>
+        <button class="btn btn-light" onclick="closeDecisionForm()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card table-wrap">
+    <table id="decisionTable">
+      <thead>
+        <tr>
+          <th>Fecha</th><th>Área</th><th>Problema</th><th>Decisión</th><th>Prioridad</th><th>Seguimiento</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>12/09/2026</td><td>Voleibol</td><td>Caída de asistencia</td><td>Evaluar horario y satisfacción</td><td><span class="badge red">Alta</span></td><td><span class="badge yellow">En proceso</span></td></tr>
+        <tr><td>10/09/2026</td><td>Atletismo</td><td>Demanda superior a capacidad</td><td>Analizar ampliación de horario</td><td><span class="badge yellow">Media</span></td><td><span class="badge blue">Programado</span></td></tr>
+        <tr><td>08/09/2026</td><td>Infraestructura</td><td>Mantenimiento preventivo</td><td>Crear calendario trimestral</td><td><span class="badge green">Baja</span></td><td><span class="badge green">Completado</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- PROGRAMAS -->
+<section id="programas" class="page">
+  <div class="section-title">
+    <h3>Programas deportivos</h3>
+    <div class="filters">
+      <select onchange="filterPrograms(this.value)">
+        <option value="all">Todos</option>
+        <option value="alto">Alto rendimiento</option>
+        <option value="formativo">Formativo</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>Programa</th><th>Categoría</th><th>Participantes</th><th>Retención</th><th>Satisfacción</th><th>Riesgo</th></tr></thead>
+      <tbody id="programTable">
+        <tr data-type="formativo"><td>Voleibol Municipal</td><td>Formativo</td><td>184</td><td>81%</td><td>74%</td><td><span class="badge red">Alto</span></td></tr>
+        <tr data-type="formativo"><td>Atletismo</td><td>Formativo</td><td>126</td><td>93%</td><td>91%</td><td><span class="badge green">Bajo</span></td></tr>
+        <tr data-type="alto"><td>Alto Rendimiento</td><td>Alto rendimiento</td><td>48</td><td>96%</td><td>94%</td><td><span class="badge green">Bajo</span></td></tr>
+        <tr data-type="formativo"><td>Natación</td><td>Formativo</td><td>211</td><td>89%</td><td>86%</td><td><span class="badge yellow">Medio</span></td></tr>
+        <tr data-type="formativo"><td>Karate</td><td>Formativo</td><td>97</td><td>94%</td><td>92%</td><td><span class="badge green">Bajo</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-title"><h3>Indicadores de operación</h3></div>
+  <div class="grid three">
+    <div class="card"><div class="kpi-label">Participantes activos</div><div class="kpi-value">666</div></div>
+    <div class="card"><div class="kpi-label">Retención promedio</div><div class="kpi-value">87.2%</div></div>
+    <div class="card"><div class="kpi-label">Satisfacción promedio</div><div class="kpi-value">87.4%</div></div>
+  </div>
+</section>
+
+<div class="footer-note">
+  SPORT-IA 360 · Prototipo conceptual académico · Datos completamente ficticios · No utilizar para decisiones reales sin validación.
+</div>
+
+</div>
+</main>
+</div>
+
+<div class="toast" id="toast">Análisis ejecutado correctamente.</div>
+
+<script>
+const titles={
+  dashboard:'Dashboard ejecutivo',
+  liderazgo:'Liderazgo',
+  cultura:'Cultura organizacional',
+  ia:'Inteligencia artificial',
+  decisiones:'Decisiones estratégicas',
+  programas:'Programas deportivos'
+};
+
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('pageTitle').textContent=titles[id];
+  document.getElementById('sidebar').classList.remove('open');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function toggleMenu(){
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+function runAI(){
+  const toast=document.getElementById('toast');
+  toast.textContent='IA: análisis completado. Se identificaron 3 patrones y 2 recomendaciones.';
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'),3500);
+}
+
+function openDecisionForm(){
+  document.getElementById('decisionForm').style.display='block';
+  document.getElementById('dProblem').focus();
+}
+function closeDecisionForm(){
+  document.getElementById('decisionForm').style.display='none';
+}
+function saveDecision(){
+  const area=document.getElementById('dArea').value;
+  const priority=document.getElementById('dPriority').value;
+  const problem=document.getElementById('dProblem').value.trim();
+  const decision=document.getElementById('dDecision').value.trim();
+
+  if(!problem || !decision){
+    showToast('Complete el problema y la decisión antes de guardar.');
+    return;
+  }
+  const today=new Date().toLocaleDateString('es-MX');
+  const badge=priority==='Alta'?'red':priority==='Media'?'yellow':'green';
+  const row=document.querySelector('#decisionTable tbody').insertRow(0);
+  row.innerHTML=`<td>${today}</td><td>${area}</td><td>${problem}</td><td>${decision}</td><td><span class="badge ${badge}">${priority}</span></td><td><span class="badge yellow">En proceso</span></td>`;
+  document.getElementById('dProblem').value='';
+  document.getElementById('dDecision').value='';
+  closeDecisionForm();
+  showToast('Decisión registrada en la bitácora.');
+}
+function showToast(message){
+  const toast=document.getElementById('toast');
+  toast.textContent=message;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'),3000);
+}
+function filterPrograms(value){
+  document.querySelectorAll('#programTable tr').forEach(row=>{
+    row.style.display=(value==='all'||row.dataset.type===value)?'':'none';
+  });
+}
+</script>
+</body>
+</html>
