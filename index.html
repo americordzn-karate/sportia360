@@ -104,6 +104,7 @@ button,input,select,textarea{font:inherit}
 }
 .section-title h3{margin:0;font-size:16px}
 .section-title span{font-size:12px;color:var(--muted)}
+.section-title .refresh{background:none;border:0;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;padding:0}
 .grid{display:grid;gap:16px}
 .kpis{grid-template-columns:repeat(4,1fr)}
 .card{
@@ -116,6 +117,7 @@ button,input,select,textarea{font:inherit}
 .up{color:var(--success)}.down{color:var(--danger)}
 .two{grid-template-columns:1.4fr 1fr}
 .three{grid-template-columns:repeat(3,1fr)}
+.four{grid-template-columns:repeat(4,1fr)}
 .chart-card{min-height:315px}
 .chart-wrap{height:240px;position:relative}
 svg{width:100%;height:100%;overflow:visible}
@@ -127,7 +129,7 @@ svg{width:100%;height:100%;overflow:visible}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:#111827}
 .dot.gold{background:var(--accent)}
 .progress{height:8px;background:#eef0f2;border-radius:99px;overflow:hidden;margin:9px 0 5px}
-.progress > span{height:100%;display:block;background:var(--accent);border-radius:99px}
+.progress > span{height:100%;display:block;background:var(--accent);border-radius:99px;transition:width .4s ease}
 .metric-row{margin:15px 0}
 .metric-head{display:flex;justify-content:space-between;font-size:12px;font-weight:700}
 .alert{
@@ -159,6 +161,7 @@ th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted
 .btn-gold{background:var(--accent);color:#111}
 .btn-light{background:#f1f3f5;color:#333}
 .btn:hover{filter:brightness(.96)}
+.btn:disabled{opacity:.6;cursor:progress}
 .filters{display:flex;gap:9px;flex-wrap:wrap}
 select,input,textarea{
   border:1px solid var(--line);border-radius:8px;
@@ -191,12 +194,20 @@ textarea{width:100%;min-height:100px;resize:vertical}
   position:fixed;right:25px;bottom:25px;background:#111827;color:#fff;
   padding:13px 17px;border-radius:9px;box-shadow:var(--shadow);
   transform:translateY(100px);opacity:0;transition:.3s;z-index:50;font-size:12px;
+  max-width:320px;
 }
 .toast.show{transform:translateY(0);opacity:1}
 .mobile-menu{display:none}
+.empty-state{color:var(--muted);font-size:12px;text-align:center;padding:30px 10px}
+.config-banner{
+  background:#fff4dc;border:1px solid #f0d38a;color:#7a5a06;
+  border-radius:10px;padding:12px 16px;font-size:12px;margin-bottom:18px;
+  display:none;
+}
+.config-banner.show{display:block}
 @media(max-width:1050px){
   .kpis{grid-template-columns:repeat(2,1fr)}
-  .two,.three{grid-template-columns:1fr}
+  .two,.three,.four{grid-template-columns:1fr}
 }
 @media(max-width:760px){
   .sidebar{transform:translateX(-100%);transition:.25s}
@@ -236,9 +247,9 @@ textarea{width:100%;min-height:100px;resize:vertical}
   </nav>
 
   <div class="sidebar-footer">
-    Prototipo académico<br>
+    Prototipo académico funcional<br>
     Instituto Municipal para el Desarrollo Deportivo<br>
-    v1.0 · 2026
+    v2.0
   </div>
 </aside>
 
@@ -262,6 +273,10 @@ textarea{width:100%;min-height:100px;resize:vertical}
 
 <div class="content">
 
+<div class="config-banner" id="configBanner">
+  ⚠ Configura la constante <code>API_URL</code> en el script de este archivo con la URL de tu implementación de Apps Script para que la aplicación muestre datos reales.
+</div>
+
 <!-- DASHBOARD -->
 <section id="dashboard" class="page active">
   <div class="hero">
@@ -270,7 +285,7 @@ textarea{width:100%;min-height:100px;resize:vertical}
       <p>SPORT-IA 360 integra indicadores deportivos, administrativos y humanos para transformar datos dispersos en información estratégica y recomendaciones accionables.</p>
     </div>
     <div class="hero-badge">
-      <strong>82/100</strong>
+      <strong id="heroIndiceGlobal">—/100</strong>
       <span>Índice global de gestión</span>
     </div>
   </div>
@@ -278,65 +293,57 @@ textarea{width:100%;min-height:100px;resize:vertical}
   <div class="grid kpis">
     <div class="card">
       <div class="kpi-label">Índice de liderazgo</div>
-      <div class="kpi-value">84.6</div>
-      <div class="delta up">▲ 6.8% vs. periodo anterior</div>
+      <div class="kpi-value" id="kpiLiderazgo">—</div>
+      <div class="delta" id="deltaLiderazgo">Cargando...</div>
     </div>
     <div class="card">
       <div class="kpi-label">Retención de usuarios</div>
-      <div class="kpi-value">87.2%</div>
-      <div class="delta up">▲ 4.1% vs. periodo anterior</div>
+      <div class="kpi-value" id="kpiRetencion">—</div>
+      <div class="delta" id="deltaRetencion">Cargando...</div>
     </div>
     <div class="card">
       <div class="kpi-label">Incidencias críticas</div>
-      <div class="kpi-value">12</div>
-      <div class="delta down">▼ 18.7% vs. periodo anterior</div>
+      <div class="kpi-value" id="kpiIncidencias">—</div>
+      <div class="delta" id="deltaIncidencias">Cargando...</div>
     </div>
     <div class="card">
       <div class="kpi-label">Decisiones con evidencia</div>
-      <div class="kpi-value">89%</div>
-      <div class="delta up">▲ 14.2% vs. periodo anterior</div>
+      <div class="kpi-value" id="kpiDecisiones">—</div>
+      <div class="delta" id="deltaDecisiones">Cargando...</div>
     </div>
   </div>
 
   <div class="section-title">
     <h3>Desempeño estratégico</h3>
-    <span>Últimas 12 semanas</span>
+    <span>Histórico disponible (snapshots semanales)</span>
   </div>
 
   <div class="grid two">
     <div class="card chart-card">
       <div class="kpi-label">Evolución de gestión y liderazgo</div>
-      <div class="chart-wrap">
-        <svg viewBox="0 0 700 230" preserveAspectRatio="none">
-          <line class="axis" x1="35" y1="25" x2="680" y2="25"/>
-          <line class="axis" x1="35" y1="80" x2="680" y2="80"/>
-          <line class="axis" x1="35" y1="135" x2="680" y2="135"/>
-          <line class="axis" x1="35" y1="190" x2="680" y2="190"/>
-          <polygon class="area" points="35,165 95,155 155,160 215,140 275,125 335,130 395,105 455,112 515,85 575,75 635,65 680,52 680,190 35,190"/>
-          <polyline class="line-main" points="35,165 95,155 155,160 215,140 275,125 335,130 395,105 455,112 515,85 575,75 635,65 680,52"/>
-          <polyline class="line-accent" points="35,178 95,170 155,168 215,157 275,149 335,145 395,132 455,125 515,118 575,100 635,95 680,82"/>
-        </svg>
+      <div class="chart-wrap" id="trendChartWrap">
+        <p class="empty-state">Cargando tendencia...</p>
       </div>
       <div class="legend"><span><i class="dot"></i>Gestión global</span><span><i class="dot gold"></i>Liderazgo</span></div>
     </div>
 
     <div class="card">
-      <div class="kpi-label">Distribución de alertas</div>
+      <div class="kpi-label">Distribución de alertas (incidencias abiertas)</div>
       <div class="metric-row">
-        <div class="metric-head"><span>Operativas</span><span>8</span></div>
-        <div class="progress"><span style="width:66%"></span></div>
+        <div class="metric-head"><span>Operativas</span><span id="distOperativaVal">0</span></div>
+        <div class="progress"><span id="distOperativaBar" style="width:0%"></span></div>
       </div>
       <div class="metric-row">
-        <div class="metric-head"><span>Personal</span><span>5</span></div>
-        <div class="progress"><span style="width:42%"></span></div>
+        <div class="metric-head"><span>Personal</span><span id="distPersonalVal">0</span></div>
+        <div class="progress"><span id="distPersonalBar" style="width:0%"></span></div>
       </div>
       <div class="metric-row">
-        <div class="metric-head"><span>Usuarios</span><span>4</span></div>
-        <div class="progress"><span style="width:34%"></span></div>
+        <div class="metric-head"><span>Usuarios</span><span id="distUsuariosVal">0</span></div>
+        <div class="progress"><span id="distUsuariosBar" style="width:0%"></span></div>
       </div>
       <div class="metric-row">
-        <div class="metric-head"><span>Financieras</span><span>2</span></div>
-        <div class="progress"><span style="width:17%"></span></div>
+        <div class="metric-head"><span>Financieras</span><span id="distFinancieraVal">0</span></div>
+        <div class="progress"><span id="distFinancieraBar" style="width:0%"></span></div>
       </div>
       <button class="btn btn-light" style="margin-top:10px" onclick="showPage('ia',document.querySelectorAll('.nav button')[3])">Analizar alertas con IA</button>
     </div>
@@ -344,73 +351,65 @@ textarea{width:100%;min-height:100px;resize:vertical}
 
   <div class="section-title">
     <h3>Alertas prioritarias</h3>
-    <span>Actualización automática</span>
+    <button class="refresh" onclick="loadDashboard()">↻ Actualizar</button>
   </div>
-  <div class="grid three">
-    <div class="card alert warning">
-      <strong>Disminución de asistencia</strong>
-      <p>La Escuela de Voleibol registra una caída del 17% durante las últimas seis semanas.</p>
-    </div>
-    <div class="card alert danger">
-      <strong>Riesgo de clima laboral</strong>
-      <p>Se detecta incremento de comentarios relacionados con comunicación interna.</p>
-    </div>
-    <div class="card alert info">
-      <strong>Oportunidad de crecimiento</strong>
-      <p>La demanda de atletismo supera en 24% la capacidad disponible actual.</p>
-    </div>
+  <div class="grid three" id="alertasPrioritariasWrap">
+    <p class="empty-state">Cargando alertas...</p>
   </div>
 </section>
 
 <!-- LIDERAZGO -->
 <section id="liderazgo" class="page">
   <div class="section-title">
-    <h3>Índice de Efectividad Gerencial</h3>
-    <span>Evaluación trimestral</span>
+    <h3>Índice de Efectividad Gerencial (IEG)</h3>
+    <span>Basado en las evaluaciones registradas</span>
   </div>
 
   <div class="grid three">
     <div class="card">
       <div class="kpi-label">IEG global</div>
-      <div class="kpi-value">84.6</div>
-      <div class="progress"><span style="width:84.6%"></span></div>
-      <small style="color:var(--muted)">Nivel: alto</small>
+      <div class="kpi-value" id="iegGlobal">—</div>
+      <div class="progress"><span id="iegGlobalBar" style="width:0%"></span></div>
+      <small style="color:var(--muted)" id="iegGlobalNivel">Cargando...</small>
     </div>
     <div class="card">
-      <div class="kpi-label">Comunicación</div>
-      <div class="kpi-value">88</div>
-      <div class="progress"><span style="width:88%"></span></div>
-      <small style="color:var(--muted)">Fortaleza principal</small>
+      <div class="kpi-label">Comunicación estratégica</div>
+      <div class="kpi-value" id="iegComunicacion">—</div>
+      <div class="progress"><span id="iegComunicacionBar" style="width:0%"></span></div>
+      <small style="color:var(--muted)">Promedio de evaluaciones recientes</small>
     </div>
     <div class="card">
       <div class="kpi-label">Delegación</div>
-      <div class="kpi-value">73</div>
-      <div class="progress"><span style="width:73%"></span></div>
-      <small style="color:var(--muted)">Área de oportunidad</small>
+      <div class="kpi-value" id="iegDelegacion">—</div>
+      <div class="progress"><span id="iegDelegacionBar" style="width:0%"></span></div>
+      <small style="color:var(--muted)">Promedio de evaluaciones recientes</small>
     </div>
   </div>
 
   <div class="section-title"><h3>Dimensiones del liderazgo</h3></div>
+  <div class="card" id="dimensionesLiderazgo">
+    <p class="empty-state">Cargando dimensiones...</p>
+  </div>
+
+  <div class="section-title"><h3>Registrar evaluación de liderazgo</h3></div>
   <div class="card">
-    <div class="metric-row">
-      <div class="metric-head"><span>Claridad de objetivos</span><span>91%</span></div>
-      <div class="progress"><span style="width:91%"></span></div>
-    </div>
-    <div class="metric-row">
-      <div class="metric-head"><span>Comunicación estratégica</span><span>88%</span></div>
-      <div class="progress"><span style="width:88%"></span></div>
-    </div>
-    <div class="metric-row">
-      <div class="metric-head"><span>Reconocimiento</span><span>82%</span></div>
-      <div class="progress"><span style="width:82%"></span></div>
-    </div>
-    <div class="metric-row">
-      <div class="metric-head"><span>Delegación</span><span>73%</span></div>
-      <div class="progress"><span style="width:73%"></span></div>
-    </div>
-    <div class="metric-row">
-      <div class="metric-head"><span>Retroalimentación</span><span>79%</span></div>
-      <div class="progress"><span style="width:79%"></span></div>
+    <div class="decision-form">
+      <div class="full">
+        <label>Evaluador (quién responde la evaluación)</label>
+        <input id="lEvaluador" style="width:100%" placeholder="Ej. Coordinación de Escuelas Deportivas">
+      </div>
+      <div><label>Claridad de objetivos (0-100)</label><input id="lClaridad" type="number" min="0" max="100" value="80"></div>
+      <div><label>Comunicación estratégica (0-100)</label><input id="lComunicacion" type="number" min="0" max="100" value="80"></div>
+      <div><label>Reconocimiento (0-100)</label><input id="lReconocimiento" type="number" min="0" max="100" value="80"></div>
+      <div><label>Delegación (0-100)</label><input id="lDelegacion" type="number" min="0" max="100" value="80"></div>
+      <div><label>Retroalimentación (0-100)</label><input id="lRetro" type="number" min="0" max="100" value="80"></div>
+      <div><label>Confianza (0-100)</label><input id="lConfianza" type="number" min="0" max="100" value="80"></div>
+      <div><label>Capacidad de respuesta (0-100)</label><input id="lRespuesta" type="number" min="0" max="100" value="80"></div>
+      <div class="full">
+        <label>Comentarios (opcional)</label>
+        <textarea id="lComentarios" placeholder="Observaciones cualitativas..."></textarea>
+      </div>
+      <div><button class="btn btn-primary" id="btnGuardarLiderazgo" onclick="saveEvaluacionLiderazgo()">Guardar evaluación</button></div>
     </div>
   </div>
 </section>
@@ -423,7 +422,7 @@ textarea{width:100%;min-height:100px;resize:vertical}
       <p>El sistema analiza encuestas, comentarios y retroalimentación para detectar cambios en la percepción del personal.</p>
     </div>
     <div class="hero-badge">
-      <strong>78/100</strong>
+      <strong id="culturaIndice">—/100</strong>
       <span>Índice de cultura saludable</span>
     </div>
   </div>
@@ -431,30 +430,42 @@ textarea{width:100%;min-height:100px;resize:vertical}
   <div class="grid three">
     <div class="card">
       <div class="kpi-label">Compromiso</div>
-      <div class="kpi-value">86%</div>
-      <span class="badge green">Favorable</span>
+      <div class="kpi-value" id="culCompromiso">—</div>
+      <span class="badge" id="culCompromisoBadge"></span>
     </div>
     <div class="card">
       <div class="kpi-label">Confianza</div>
-      <div class="kpi-value">81%</div>
-      <span class="badge green">Favorable</span>
+      <div class="kpi-value" id="culConfianza">—</div>
+      <span class="badge" id="culConfianzaBadge"></span>
     </div>
     <div class="card">
       <div class="kpi-label">Comunicación interna</div>
-      <div class="kpi-value">69%</div>
-      <span class="badge yellow">Atención</span>
+      <div class="kpi-value" id="culComunicacion">—</div>
+      <span class="badge" id="culComunicacionBadge"></span>
     </div>
   </div>
 
   <div class="section-title"><h3>Lectura cualitativa de la organización</h3></div>
   <div class="card">
-    <div class="alert info">
-      <strong>Hallazgo de IA</strong>
-      <p>En las últimas cuatro semanas aumentaron las menciones relacionadas con coordinación entre áreas. La tendencia aparece principalmente en los equipos de entrenadores y coordinación operativa.</p>
-    </div>
+    <div id="culturaHallazgos"><p class="empty-state">Cargando...</p></div>
     <div class="alert warning">
-      <strong>Recomendación</strong>
-      <p>Realizar una reunión interáreas con agenda estructurada y establecer un protocolo digital para comunicar cambios de horarios, instalaciones y eventos.</p>
+      <strong>Recomendación general</strong>
+      <p>Cuando la comunicación interna esté por debajo de 70 puntos, se recomienda realizar una reunión interáreas con agenda estructurada y establecer un protocolo digital para comunicar cambios de horarios, instalaciones y eventos.</p>
+    </div>
+  </div>
+
+  <div class="section-title"><h3>Registrar encuesta de clima</h3></div>
+  <div class="card">
+    <div class="decision-form">
+      <div class="full"><label>Área / departamento</label><input id="cArea" style="width:100%" placeholder="Ej. Coordinación operativa"></div>
+      <div><label>Compromiso (0-100)</label><input id="cCompromiso" type="number" min="0" max="100" value="80"></div>
+      <div><label>Confianza (0-100)</label><input id="cConfianza" type="number" min="0" max="100" value="80"></div>
+      <div><label>Comunicación interna (0-100)</label><input id="cComunicacion" type="number" min="0" max="100" value="80"></div>
+      <div class="full">
+        <label>Comentario (opcional — el motor de IA lo analiza automáticamente)</label>
+        <textarea id="cComentario" placeholder="Observaciones del encuestado..."></textarea>
+      </div>
+      <div><button class="btn btn-primary" id="btnGuardarCultura" onclick="saveEncuestaCultura()">Guardar encuesta</button></div>
     </div>
   </div>
 </section>
@@ -473,19 +484,13 @@ textarea{width:100%;min-height:100px;resize:vertical}
       <span class="badge green">SISTEMA ACTIVO</span>
     </div>
 
-    <p>El motor analiza indicadores históricos, datos operativos y señales cualitativas para identificar riesgos, oportunidades y posibles cursos de acción. Las recomendaciones son auxiliares: la decisión final corresponde al gerente.</p>
+    <p>El motor analiza indicadores históricos, datos operativos y señales cualitativas mediante reglas y umbrales estadísticos para identificar riesgos, oportunidades y posibles cursos de acción. Las recomendaciones son auxiliares: la decisión final corresponde al gerente.</p>
 
-    <div class="recommendation">
-      <strong>RECOMENDACIÓN #001 · PRIORIDAD ALTA</strong>
-      <div>La disminución de asistencia en Voleibol coincide con un aumento de incidencias operativas. Antes de ampliar presupuesto publicitario, se recomienda analizar horarios, disponibilidad del entrenador y satisfacción de los usuarios.</div>
+    <div id="iaRecommendationsList">
+      <p style="color:#aeb4bd;font-size:12px">Cargando recomendaciones...</p>
     </div>
 
-    <div class="recommendation">
-      <strong>OPORTUNIDAD #002 · PRIORIDAD MEDIA</strong>
-      <div>Atletismo presenta demanda superior a la capacidad instalada. Se recomienda evaluar la ampliación de horarios antes de crear un nuevo grupo.</div>
-    </div>
-
-    <button class="btn btn-gold" style="margin-top:15px" onclick="runAI()">Ejecutar nuevo análisis</button>
+    <button class="btn btn-gold" style="margin-top:15px" id="btnRunAI" onclick="runAI()">Ejecutar nuevo análisis</button>
   </div>
 
   <div class="section-title"><h3>Flujo de inteligencia organizacional</h3></div>
@@ -520,11 +525,23 @@ textarea{width:100%;min-height:100px;resize:vertical}
         <input id="dProblem" style="width:100%" placeholder="Describa el problema...">
       </div>
       <div class="full">
+        <label>Información disponible</label>
+        <input id="dInfo" style="width:100%" placeholder="Datos o reportes que sustentan la decisión (opcional)">
+      </div>
+      <div class="full">
+        <label>Alternativas consideradas</label>
+        <input id="dAlternativas" style="width:100%" placeholder="Opciones evaluadas antes de decidir (opcional)">
+      </div>
+      <div class="full">
         <label>Decisión tomada</label>
         <textarea id="dDecision" placeholder="Describa la decisión y sus fundamentos..."></textarea>
       </div>
+      <div class="full">
+        <label>Responsable</label>
+        <input id="dResponsable" style="width:100%" placeholder="Ej. Dirección General" value="Dirección General">
+      </div>
       <div>
-        <button class="btn btn-primary" onclick="saveDecision()">Guardar decisión</button>
+        <button class="btn btn-primary" id="btnGuardarDecision" onclick="saveDecision()">Guardar decisión</button>
         <button class="btn btn-light" onclick="closeDecisionForm()">Cancelar</button>
       </div>
     </div>
@@ -538,9 +555,7 @@ textarea{width:100%;min-height:100px;resize:vertical}
         </tr>
       </thead>
       <tbody>
-        <tr><td>12/09/2026</td><td>Voleibol</td><td>Caída de asistencia</td><td>Evaluar horario y satisfacción</td><td><span class="badge red">Alta</span></td><td><span class="badge yellow">En proceso</span></td></tr>
-        <tr><td>10/09/2026</td><td>Atletismo</td><td>Demanda superior a capacidad</td><td>Analizar ampliación de horario</td><td><span class="badge yellow">Media</span></td><td><span class="badge blue">Programado</span></td></tr>
-        <tr><td>08/09/2026</td><td>Infraestructura</td><td>Mantenimiento preventivo</td><td>Crear calendario trimestral</td><td><span class="badge green">Baja</span></td><td><span class="badge green">Completado</span></td></tr>
+        <tr><td colspan="6" class="empty-state">Cargando bitácora...</td></tr>
       </tbody>
     </table>
   </div>
@@ -563,25 +578,21 @@ textarea{width:100%;min-height:100px;resize:vertical}
     <table>
       <thead><tr><th>Programa</th><th>Categoría</th><th>Participantes</th><th>Retención</th><th>Satisfacción</th><th>Riesgo</th></tr></thead>
       <tbody id="programTable">
-        <tr data-type="formativo"><td>Voleibol Municipal</td><td>Formativo</td><td>184</td><td>81%</td><td>74%</td><td><span class="badge red">Alto</span></td></tr>
-        <tr data-type="formativo"><td>Atletismo</td><td>Formativo</td><td>126</td><td>93%</td><td>91%</td><td><span class="badge green">Bajo</span></td></tr>
-        <tr data-type="alto"><td>Alto Rendimiento</td><td>Alto rendimiento</td><td>48</td><td>96%</td><td>94%</td><td><span class="badge green">Bajo</span></td></tr>
-        <tr data-type="formativo"><td>Natación</td><td>Formativo</td><td>211</td><td>89%</td><td>86%</td><td><span class="badge yellow">Medio</span></td></tr>
-        <tr data-type="formativo"><td>Karate</td><td>Formativo</td><td>97</td><td>94%</td><td>92%</td><td><span class="badge green">Bajo</span></td></tr>
+        <tr><td colspan="6" class="empty-state">Cargando programas...</td></tr>
       </tbody>
     </table>
   </div>
 
   <div class="section-title"><h3>Indicadores de operación</h3></div>
   <div class="grid three">
-    <div class="card"><div class="kpi-label">Participantes activos</div><div class="kpi-value">666</div></div>
-    <div class="card"><div class="kpi-label">Retención promedio</div><div class="kpi-value">87.2%</div></div>
-    <div class="card"><div class="kpi-label">Satisfacción promedio</div><div class="kpi-value">87.4%</div></div>
+    <div class="card"><div class="kpi-label">Participantes activos</div><div class="kpi-value" id="kpiParticipantes">—</div></div>
+    <div class="card"><div class="kpi-label">Retención promedio</div><div class="kpi-value" id="kpiRetencionProm">—</div></div>
+    <div class="card"><div class="kpi-label">Satisfacción promedio</div><div class="kpi-value" id="kpiSatisfaccionProm">—</div></div>
   </div>
 </section>
 
 <div class="footer-note">
-  SPORT-IA 360 · Prototipo conceptual académico · Datos completamente ficticios · No utilizar para decisiones reales sin validación.
+  SPORT-IA 360 · Prototipo académico funcional · Los datos provienen de la hoja de cálculo configurada como base de datos · Instituto Municipal para el Desarrollo Deportivo (organización ficticia).
 </div>
 
 </div>
@@ -591,6 +602,13 @@ textarea{width:100%;min-height:100px;resize:vertical}
 <div class="toast" id="toast">Análisis ejecutado correctamente.</div>
 
 <script>
+/* ============================================================================
+ * CONFIGURACIÓN — PASO OBLIGATORIO
+ * Pega aquí la URL de tu implementación de Apps Script (termina en /exec).
+ * Instrucciones completas en GUIA_INSTALACION.md.
+ * ==========================================================================*/
+const API_URL = 'https://script.google.com/macros/s/AKfycbzRQUSXe6JnY0Zkl-wXbleINbaJa1YaNAJQNrpdDC2XG4B6kfd6u-PhDFDFuacCfDsS/exec';
+
 const titles={
   dashboard:'Dashboard ejecutivo',
   liderazgo:'Liderazgo',
@@ -600,6 +618,48 @@ const titles={
   programas:'Programas deportivos'
 };
 
+const loaders = {
+  dashboard: loadDashboard,
+  liderazgo: loadLiderazgo,
+  cultura: loadCultura,
+  ia: loadIA,
+  decisiones: loadDecisiones,
+  programas: loadProgramas
+};
+
+function apiConfigurada(){
+  return API_URL && API_URL.indexOf('PEGA_AQUI') === -1;
+}
+
+// ---------------------------------------------------------------------------
+// Capa de comunicación con el backend de Apps Script
+// ---------------------------------------------------------------------------
+async function apiGet(action, params){
+  if (!apiConfigurada()) throw new Error('Configura API_URL antes de usar la aplicación.');
+  const url = new URL(API_URL);
+  url.searchParams.set('action', action);
+  if (params) Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
+  const res = await fetch(url.toString());
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || 'Error desconocido del servidor.');
+  return json.data;
+}
+
+async function apiPost(action, data){
+  if (!apiConfigurada()) throw new Error('Configura API_URL antes de usar la aplicación.');
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita el preflight CORS
+    body: JSON.stringify({ action: action, data: data || {} })
+  });
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || 'Error desconocido del servidor.');
+  return json.data;
+}
+
+// ---------------------------------------------------------------------------
+// Navegación
+// ---------------------------------------------------------------------------
 function showPage(id,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -608,19 +668,308 @@ function showPage(id,btn){
   document.getElementById('pageTitle').textContent=titles[id];
   document.getElementById('sidebar').classList.remove('open');
   window.scrollTo({top:0,behavior:'smooth'});
+  if (loaders[id]) loaders[id]();
 }
 
 function toggleMenu(){
   document.getElementById('sidebar').classList.toggle('open');
 }
 
-function runAI(){
+function showToast(message){
   const toast=document.getElementById('toast');
-  toast.textContent='IA: análisis completado. Se identificaron 3 patrones y 2 recomendaciones.';
+  toast.textContent=message;
   toast.classList.add('show');
   setTimeout(()=>toast.classList.remove('show'),3500);
 }
 
+// ---------------------------------------------------------------------------
+// DASHBOARD
+// ---------------------------------------------------------------------------
+function setKpiCard(id, val, suffix){
+  document.getElementById(id).textContent = (val===null||val===undefined) ? '—' : (val+suffix);
+}
+
+function renderDeltas(historico){
+  const campos = {
+    IndiceLiderazgo: {id:'deltaLiderazgo', suffix:''},
+    RetencionUsuarios: {id:'deltaRetencion', suffix:'%'},
+    IncidenciasCriticas: {id:'deltaIncidencias', suffix:'', invert:true},
+    DecisionesConEvidencia: {id:'deltaDecisiones', suffix:'%'}
+  };
+  if (!historico || historico.length < 2) {
+    Object.values(campos).forEach(c=>{
+      const el = document.getElementById(c.id);
+      el.className = 'delta';
+      el.textContent = 'Aún sin histórico suficiente para comparar';
+    });
+    return;
+  }
+  const last = historico[historico.length-1];
+  const prev = historico[historico.length-2];
+  Object.keys(campos).forEach(campo=>{
+    const cfg = campos[campo];
+    const el = document.getElementById(cfg.id);
+    const a = Number(last[campo]||0), b = Number(prev[campo]||0);
+    const diff = Math.round((a-b)*10)/10;
+    const positivo = cfg.invert ? diff < 0 : diff > 0;
+    const neutro = diff === 0;
+    el.className = 'delta ' + (neutro? '' : (positivo?'up':'down'));
+    const flecha = neutro ? '·' : (positivo ? '▲' : '▼');
+    el.textContent = flecha+' '+Math.abs(diff)+cfg.suffix+' vs. periodo anterior';
+  });
+}
+
+function renderTrendChart(historico){
+  const wrap = document.getElementById('trendChartWrap');
+  if (!historico || historico.length < 2) {
+    wrap.innerHTML = '<p class="empty-state">Aún no hay suficientes registros históricos para graficar la tendencia. Se necesitan al menos 2 filas en la hoja "Historico_KPIs" (se agregan automáticamente cada semana, o de forma manual desde el menú de Google Sheets).</p>';
+    return;
+  }
+  const w=700, h=230, padL=40, padR=15, padT=20, padB=25;
+  const n = historico.length;
+  const xStep = n > 1 ? (w-padL-padR)/(n-1) : 0;
+  const yScale = v => padT + (100-Math.max(0,Math.min(100,v))) * ((h-padT-padB)/100);
+
+  const globalVals = historico.map(r => Number(r.IndiceGlobalGestion||0));
+  const liderazgoVals = historico.map(r => Number(r.IndiceLiderazgo||0));
+  const pointsFor = vals => vals.map((v,i)=> (padL+i*xStep).toFixed(1)+','+yScale(v).toFixed(1)).join(' ');
+
+  const mainPoints = pointsFor(globalVals);
+  const accentPoints = pointsFor(liderazgoVals);
+  const areaPoints = mainPoints+' '+(padL+(n-1)*xStep).toFixed(1)+','+(h-padB)+' '+padL+','+(h-padB);
+
+  wrap.innerHTML = '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'
+    + '<line class="axis" x1="'+padL+'" y1="'+padT+'" x2="'+(w-padR)+'" y2="'+padT+'"/>'
+    + '<line class="axis" x1="'+padL+'" y1="'+((padT+h-padB)/2)+'" x2="'+(w-padR)+'" y2="'+((padT+h-padB)/2)+'"/>'
+    + '<line class="axis" x1="'+padL+'" y1="'+(h-padB)+'" x2="'+(w-padR)+'" y2="'+(h-padB)+'"/>'
+    + '<polygon class="area" points="'+areaPoints+'"/>'
+    + '<polyline class="line-main" points="'+mainPoints+'"/>'
+    + '<polyline class="line-accent" points="'+accentPoints+'"/>'
+    + '</svg>';
+}
+
+function renderAlertasPrioritarias(lista){
+  const cont = document.getElementById('alertasPrioritariasWrap');
+  if (!lista || !lista.length) {
+    cont.innerHTML = '<div class="card" style="grid-column:1/-1"><p class="empty-state">No hay alertas activas. Ejecuta el análisis de IA en el módulo correspondiente para generar recomendaciones.</p></div>';
+    return;
+  }
+  const claseTipo = t => t==='Alerta' ? 'danger' : (t==='Oportunidad' ? 'info' : 'warning');
+  cont.innerHTML = lista.map(r =>
+    '<div class="card alert '+claseTipo(r.Tipo)+'"><strong>'+r.Titulo+'</strong><p>'+r.Descripcion+'</p></div>'
+  ).join('');
+}
+
+async function loadDashboard(){
+  try {
+    const d = await apiGet('getDashboard');
+    const k = d.kpis;
+    document.getElementById('heroIndiceGlobal').textContent = (k.indiceGlobal!==null?k.indiceGlobal:'—')+'/100';
+    setKpiCard('kpiLiderazgo', k.indiceLiderazgo, '');
+    setKpiCard('kpiRetencion', k.retencionUsuarios, '%');
+    setKpiCard('kpiIncidencias', k.incidenciasCriticas, '');
+    setKpiCard('kpiDecisiones', k.decisionesConEvidencia, '%');
+    renderDeltas(d.historico);
+    renderTrendChart(d.historico);
+
+    const dist = d.distribucionAlertas;
+    const max = Math.max(1, dist.Operativa||0, dist.Personal||0, dist.Usuarios||0, dist.Financiera||0);
+    ['Operativa','Personal','Usuarios','Financiera'].forEach(cat=>{
+      document.getElementById('dist'+cat+'Val').textContent = dist[cat]||0;
+      document.getElementById('dist'+cat+'Bar').style.width = (((dist[cat]||0)/max)*100)+'%';
+    });
+
+    renderAlertasPrioritarias(d.alertasPrioritarias);
+  } catch(err){
+    document.getElementById('trendChartWrap').innerHTML = '<p class="empty-state">Error al cargar el dashboard: '+err.message+'</p>';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// LIDERAZGO
+// ---------------------------------------------------------------------------
+const ETIQUETAS_LIDERAZGO = {
+  ClaridadObjetivos:'Claridad de objetivos',
+  ComunicacionEstrategica:'Comunicación estratégica',
+  Reconocimiento:'Reconocimiento',
+  Delegacion:'Delegación',
+  Retroalimentacion:'Retroalimentación',
+  Confianza:'Confianza',
+  CapacidadRespuesta:'Capacidad de respuesta'
+};
+
+async function loadLiderazgo(){
+  try {
+    const data = await apiGet('getLiderazgo');
+    const ieg = data.ieg;
+    if (!ieg) {
+      document.getElementById('iegGlobal').textContent = '—';
+      document.getElementById('iegGlobalNivel').textContent = 'Sin evaluaciones registradas todavía.';
+      document.getElementById('dimensionesLiderazgo').innerHTML = '<p class="empty-state">Registra la primera evaluación para ver este panel.</p>';
+      return;
+    }
+    document.getElementById('iegGlobal').textContent = ieg.global;
+    document.getElementById('iegGlobalBar').style.width = ieg.global+'%';
+    const nivel = ieg.global>=80?'alto':(ieg.global>=60?'medio':'bajo');
+    document.getElementById('iegGlobalNivel').textContent = 'Nivel: '+nivel+' · basado en '+ieg.n+' evaluación(es)';
+    document.getElementById('iegComunicacion').textContent = Math.round(ieg.dimensiones.ComunicacionEstrategica);
+    document.getElementById('iegComunicacionBar').style.width = ieg.dimensiones.ComunicacionEstrategica+'%';
+    document.getElementById('iegDelegacion').textContent = Math.round(ieg.dimensiones.Delegacion);
+    document.getElementById('iegDelegacionBar').style.width = ieg.dimensiones.Delegacion+'%';
+
+    document.getElementById('dimensionesLiderazgo').innerHTML = Object.keys(ETIQUETAS_LIDERAZGO).map(key=>{
+      const v = Math.round(ieg.dimensiones[key]||0);
+      return '<div class="metric-row"><div class="metric-head"><span>'+ETIQUETAS_LIDERAZGO[key]+'</span><span>'+v+'%</span></div>'
+        + '<div class="progress"><span style="width:'+v+'%"></span></div></div>';
+    }).join('');
+  } catch(err){
+    showToast('Error al cargar liderazgo: '+err.message);
+  }
+}
+
+async function saveEvaluacionLiderazgo(){
+  const btn = document.getElementById('btnGuardarLiderazgo');
+  const payload = {
+    Evaluador: document.getElementById('lEvaluador').value.trim() || 'Anónimo',
+    ClaridadObjetivos: document.getElementById('lClaridad').value,
+    ComunicacionEstrategica: document.getElementById('lComunicacion').value,
+    Reconocimiento: document.getElementById('lReconocimiento').value,
+    Delegacion: document.getElementById('lDelegacion').value,
+    Retroalimentacion: document.getElementById('lRetro').value,
+    Confianza: document.getElementById('lConfianza').value,
+    CapacidadRespuesta: document.getElementById('lRespuesta').value,
+    Comentarios: document.getElementById('lComentarios').value.trim()
+  };
+  btn.disabled = true;
+  try {
+    await apiPost('addEvaluacionLiderazgo', payload);
+    showToast('Evaluación registrada correctamente.');
+    document.getElementById('lEvaluador').value = '';
+    document.getElementById('lComentarios').value = '';
+    loadLiderazgo();
+  } catch(err){
+    showToast('Error al guardar: '+err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// CULTURA
+// ---------------------------------------------------------------------------
+function badgeClaseValor(v){ return v>=80?'green':(v>=70?'yellow':'red'); }
+function badgeTextoValor(v){ return v>=80?'Favorable':(v>=70?'Atención':'Riesgo'); }
+
+async function loadCultura(){
+  try {
+    const c = await apiGet('getCultura');
+    document.getElementById('culturaIndice').textContent = (c.indice!==null?c.indice:'—')+'/100';
+
+    function pintar(valId, badgeId, val){
+      document.getElementById(valId).textContent = val!==null? val+'%':'—';
+      const b = document.getElementById(badgeId);
+      if (val!==null){ b.className='badge '+badgeClaseValor(val); b.textContent=badgeTextoValor(val); }
+      else { b.className='badge'; b.textContent=''; }
+    }
+    pintar('culCompromiso','culCompromisoBadge', c.compromiso);
+    pintar('culConfianza','culConfianzaBadge', c.confianza);
+    pintar('culComunicacion','culComunicacionBadge', c.comunicacion);
+
+    const box = document.getElementById('culturaHallazgos');
+    if (!c.totalEncuestas) {
+      box.innerHTML = '<p class="empty-state">Aún no hay encuestas registradas.</p>';
+    } else if (!c.hallazgos.length) {
+      box.innerHTML = '<div class="alert info"><strong>Lectura de IA</strong><p>No se identificaron temas recurrentes en los comentarios registrados hasta ahora ('+c.totalEncuestas+' encuesta(s) analizadas).</p></div>';
+    } else {
+      const temas = c.hallazgos.map(h=>h.palabra+' ('+h.menciones+')').join(', ');
+      box.innerHTML = '<div class="alert info"><strong>Hallazgo de IA</strong><p>Sobre '+c.totalEncuestas+' encuesta(s) analizadas, los temas más mencionados en los comentarios son: '+temas+'.</p></div>';
+    }
+  } catch(err){
+    showToast('Error al cargar cultura organizacional: '+err.message);
+  }
+}
+
+async function saveEncuestaCultura(){
+  const btn = document.getElementById('btnGuardarCultura');
+  const payload = {
+    Area: document.getElementById('cArea').value.trim() || 'General',
+    Compromiso: document.getElementById('cCompromiso').value,
+    Confianza: document.getElementById('cConfianza').value,
+    ComunicacionInterna: document.getElementById('cComunicacion').value,
+    Comentario: document.getElementById('cComentario').value.trim()
+  };
+  btn.disabled = true;
+  try {
+    await apiPost('addEncuestaCultura', payload);
+    showToast('Encuesta registrada correctamente.');
+    document.getElementById('cArea').value = '';
+    document.getElementById('cComentario').value = '';
+    loadCultura();
+  } catch(err){
+    showToast('Error al guardar: '+err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// INTELIGENCIA ARTIFICIAL
+// ---------------------------------------------------------------------------
+async function loadIA(){
+  const box = document.getElementById('iaRecommendationsList');
+  try {
+    const lista = (await apiGet('getIA')).filter(r=>r.Estado!=='Descartada');
+    if (!lista.length) {
+      box.innerHTML = '<p style="color:#aeb4bd;font-size:12px">Sin recomendaciones activas. Presiona "Ejecutar nuevo análisis" para que el motor revise los datos actuales.</p>';
+      return;
+    }
+    box.innerHTML = lista.map(r =>
+      '<div class="recommendation">'
+      + '<strong>'+r.Titulo+' · PRIORIDAD '+String(r.Prioridad||'').toUpperCase()+'</strong>'
+      + '<div>'+r.Descripcion+'</div>'
+      + '<div style="margin-top:10px;display:flex;gap:8px">'
+      + '<button class="btn btn-light" onclick="marcarRecomendacion(\''+r.ID_Recomendacion+'\',\'Revisada\')">Marcar revisada</button>'
+      + '<button class="btn btn-light" onclick="marcarRecomendacion(\''+r.ID_Recomendacion+'\',\'Descartada\')">Descartar</button>'
+      + '</div></div>'
+    ).join('');
+  } catch(err){
+    box.innerHTML = '<p style="color:#f2a7a0;font-size:12px">Error al cargar recomendaciones: '+err.message+'</p>';
+  }
+}
+
+async function marcarRecomendacion(id, estado){
+  try {
+    await apiPost('updateRecomendacionEstado', {ID_Recomendacion:id, Estado:estado});
+    showToast('Recomendación actualizada.');
+    loadIA();
+  } catch(err){
+    showToast('Error: '+err.message);
+  }
+}
+
+async function runAI(){
+  const btn = document.getElementById('btnRunAI');
+  btn.disabled = true;
+  showToast('Ejecutando análisis...');
+  try {
+    const res = await apiPost('runAnalysis', {});
+    if (res.generadas > 0) {
+      showToast('IA: análisis completado. Se generaron '+res.generadas+' nueva(s) recomendación(es).');
+    } else {
+      showToast('IA: análisis completado. No se detectaron nuevos patrones relevantes.');
+    }
+    loadIA();
+    if (document.getElementById('dashboard').classList.contains('active')) loadDashboard();
+  } catch(err){
+    showToast('Error al ejecutar el análisis: '+err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// DECISIONES
+// ---------------------------------------------------------------------------
 function openDecisionForm(){
   document.getElementById('decisionForm').style.display='block';
   document.getElementById('dProblem').focus();
@@ -628,36 +977,128 @@ function openDecisionForm(){
 function closeDecisionForm(){
   document.getElementById('decisionForm').style.display='none';
 }
-function saveDecision(){
+
+function badgePrioridad(p){ return p==='Alta'?'red':(p==='Media'?'yellow':'green'); }
+
+async function loadDecisiones(){
+  const tbody = document.querySelector('#decisionTable tbody');
+  try {
+    const lista = await apiGet('getDecisiones');
+    lista.sort((a,b)=> new Date(b.Fecha) - new Date(a.Fecha));
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Sin decisiones registradas todavía.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = lista.map(d =>
+      '<tr><td>'+d.Fecha+'</td><td>'+d.Area+'</td><td>'+d.Problema+'</td><td>'+d.DecisionTomada+'</td>'
+      + '<td><span class="badge '+badgePrioridad(d.Prioridad)+'">'+d.Prioridad+'</span></td>'
+      + '<td><select onchange="cambiarEstadoDecision(\''+d.ID_Decision+'\', this.value)">'
+      + ['Programado','En proceso','Completado'].map(op=>'<option value="'+op+'"'+(op===d.Estado?' selected':'')+'>'+op+'</option>').join('')
+      + '</select></td></tr>'
+    ).join('');
+  } catch(err){
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error al cargar la bitácora: '+err.message+'</td></tr>';
+  }
+}
+
+async function cambiarEstadoDecision(id, estado){
+  try {
+    await apiPost('updateDecision', {ID_Decision:id, Estado:estado});
+    showToast('Estado de la decisión actualizado.');
+  } catch(err){
+    showToast('Error: '+err.message);
+  }
+}
+
+async function saveDecision(){
   const area=document.getElementById('dArea').value;
   const priority=document.getElementById('dPriority').value;
   const problem=document.getElementById('dProblem').value.trim();
   const decision=document.getElementById('dDecision').value.trim();
+  const info=document.getElementById('dInfo').value.trim();
+  const alternativas=document.getElementById('dAlternativas').value.trim();
+  const responsable=document.getElementById('dResponsable').value.trim();
 
   if(!problem || !decision){
     showToast('Complete el problema y la decisión antes de guardar.');
     return;
   }
-  const today=new Date().toLocaleDateString('es-MX');
-  const badge=priority==='Alta'?'red':priority==='Media'?'yellow':'green';
-  const row=document.querySelector('#decisionTable tbody').insertRow(0);
-  row.innerHTML=`<td>${today}</td><td>${area}</td><td>${problem}</td><td>${decision}</td><td><span class="badge ${badge}">${priority}</span></td><td><span class="badge yellow">En proceso</span></td>`;
-  document.getElementById('dProblem').value='';
-  document.getElementById('dDecision').value='';
-  closeDecisionForm();
-  showToast('Decisión registrada en la bitácora.');
+  const btn = document.getElementById('btnGuardarDecision');
+  btn.disabled = true;
+  try {
+    await apiPost('addDecision', {
+      Area: area, Prioridad: priority, Problema: problem, DecisionTomada: decision,
+      InformacionDisponible: info, AlternativasConsideradas: alternativas,
+      Responsable: responsable || 'Dirección General', Estado: 'Programado'
+    });
+    document.getElementById('dProblem').value='';
+    document.getElementById('dDecision').value='';
+    document.getElementById('dInfo').value='';
+    document.getElementById('dAlternativas').value='';
+    closeDecisionForm();
+    showToast('Decisión registrada en la bitácora.');
+    loadDecisiones();
+  } catch(err){
+    showToast('Error al guardar: '+err.message);
+  } finally {
+    btn.disabled = false;
+  }
 }
-function showToast(message){
-  const toast=document.getElementById('toast');
-  toast.textContent=message;
-  toast.classList.add('show');
-  setTimeout(()=>toast.classList.remove('show'),3000);
+
+// ---------------------------------------------------------------------------
+// PROGRAMAS
+// ---------------------------------------------------------------------------
+let programasCache = [];
+
+function badgeRiesgo(r){ return r==='Alto'?'red':(r==='Medio'?'yellow':'green'); }
+function categoriaKey(c){ return c==='Alto rendimiento' ? 'alto' : 'formativo'; }
+
+function renderProgramas(lista, filtro){
+  const tbody = document.getElementById('programTable');
+  const filtrados = lista.filter(p => filtro==='all' || categoriaKey(p.Categoria)===filtro);
+  if (!filtrados.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Sin programas para este filtro.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtrados.map(p =>
+    '<tr data-type="'+categoriaKey(p.Categoria)+'"><td>'+p.Nombre+'</td><td>'+p.Categoria+'</td><td>'+p.Participantes+'</td>'
+    + '<td>'+(p.Retencion!==null?p.Retencion+'%':'—')+'</td>'
+    + '<td>'+(p.Satisfaccion!==null?p.Satisfaccion+'%':'—')+'</td>'
+    + '<td><span class="badge '+badgeRiesgo(p.Riesgo)+'">'+p.Riesgo+'</span></td></tr>'
+  ).join('');
 }
+
 function filterPrograms(value){
-  document.querySelectorAll('#programTable tr').forEach(row=>{
-    row.style.display=(value==='all'||row.dataset.type===value)?'':'none';
-  });
+  renderProgramas(programasCache, value);
 }
+
+async function loadProgramas(){
+  const tbody = document.getElementById('programTable');
+  try {
+    const lista = await apiGet('getProgramas');
+    programasCache = lista;
+    renderProgramas(lista, 'all');
+
+    const activos = lista.reduce((s,p)=>s+(p.Participantes||0),0);
+    const retVals = lista.map(p=>p.Retencion).filter(v=>v!==null);
+    const satVals = lista.map(p=>p.Satisfaccion).filter(v=>v!==null);
+    document.getElementById('kpiParticipantes').textContent = activos;
+    document.getElementById('kpiRetencionProm').textContent = retVals.length? (retVals.reduce((a,b)=>a+b,0)/retVals.length).toFixed(1)+'%':'—';
+    document.getElementById('kpiSatisfaccionProm').textContent = satVals.length? (satVals.reduce((a,b)=>a+b,0)/satVals.length).toFixed(1)+'%':'—';
+  } catch(err){
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error al cargar programas: '+err.message+'</td></tr>';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// INICIO
+// ---------------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  if (!apiConfigurada()) {
+    document.getElementById('configBanner').classList.add('show');
+  }
+  loadDashboard();
+});
 </script>
 </body>
 </html>
