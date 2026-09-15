@@ -613,6 +613,36 @@ textarea{width:100%;min-height:100px;resize:vertical}
     <div class="card"><div class="kpi-label">Retención promedio</div><div class="kpi-value" id="kpiRetencionProm">—</div></div>
     <div class="card"><div class="kpi-label">Satisfacción promedio</div><div class="kpi-value" id="kpiSatisfaccionProm">—</div></div>
   </div>
+
+  <div class="section-title"><h3>Registrar asistencia (corte periódico)</h3></div>
+  <div class="card">
+    <p style="font-size:12px;color:var(--muted);margin-top:0">Captura este corte cada semana o mes por programa. Con al menos dos cortes, el sistema calcula tendencia, retención y riesgo automáticamente.</p>
+    <div class="decision-form">
+      <div>
+        <label>Programa</label>
+        <select id="asisPrograma"><option value="">Selecciona un programa...</option></select>
+      </div>
+      <div><label>Fecha del corte</label><input id="asisFecha" type="date"></div>
+      <div><label>Inscritos</label><input id="asisInscritos" type="number" min="0" value="0"></div>
+      <div><label>Asistentes</label><input id="asisAsistentes" type="number" min="0" value="0"></div>
+      <div><label>Bajas en el periodo</label><input id="asisBajas" type="number" min="0" value="0"></div>
+      <div><button class="btn btn-primary" id="btnGuardarAsistencia" onclick="saveAsistencia()">Registrar asistencia</button></div>
+    </div>
+  </div>
+
+  <div class="section-title"><h3>Registrar satisfacción (encuesta por programa)</h3></div>
+  <div class="card">
+    <div class="decision-form">
+      <div>
+        <label>Programa</label>
+        <select id="satPrograma"><option value="">Selecciona un programa...</option></select>
+      </div>
+      <div><label>Fecha</label><input id="satFecha" type="date"></div>
+      <div><label>Puntaje promedio (0-100)</label><input id="satPuntaje" type="number" min="0" max="100" value="85"></div>
+      <div><label>Número de encuestas</label><input id="satNum" type="number" min="0" value="20"></div>
+      <div><button class="btn btn-primary" id="btnGuardarSatisfaccion" onclick="saveSatisfaccion()">Registrar satisfacción</button></div>
+    </div>
+  </div>
 </section>
 
 <div class="footer-note">
@@ -1107,6 +1137,11 @@ async function loadProgramas(){
     const lista = await apiGet('getProgramas');
     programasCache = lista;
     renderProgramas(lista, 'all');
+    poblarSelectsPrograma(lista);
+    const asisFecha = document.getElementById('asisFecha');
+    const satFecha = document.getElementById('satFecha');
+    if (!asisFecha.value) asisFecha.value = hoyISO();
+    if (!satFecha.value) satFecha.value = hoyISO();
 
     const activos = lista.reduce((s,p)=>s+(p.Participantes||0),0);
     const retVals = lista.map(p=>p.Retencion).filter(v=>v!==null);
@@ -1116,6 +1151,71 @@ async function loadProgramas(){
     document.getElementById('kpiSatisfaccionProm').textContent = satVals.length? (satVals.reduce((a,b)=>a+b,0)/satVals.length).toFixed(1)+'%':'—';
   } catch(err){
     tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Error al cargar programas: '+err.message+'</td></tr>';
+  }
+}
+
+function poblarSelectsPrograma(lista){
+  const opciones = '<option value="">Selecciona un programa...</option>'
+    + lista.map(p => '<option value="'+p.ID_Programa+'">'+p.Nombre+'</option>').join('');
+  const selAsis = document.getElementById('asisPrograma');
+  const selSat = document.getElementById('satPrograma');
+  const prevAsis = selAsis.value, prevSat = selSat.value;
+  selAsis.innerHTML = opciones;
+  selSat.innerHTML = opciones;
+  if (lista.some(p=>p.ID_Programa===prevAsis)) selAsis.value = prevAsis;
+  if (lista.some(p=>p.ID_Programa===prevSat)) selSat.value = prevSat;
+}
+
+function hoyISO(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+async function saveAsistencia(){
+  const idPrograma = document.getElementById('asisPrograma').value;
+  if (!idPrograma) { showToast('Selecciona un programa antes de registrar la asistencia.'); return; }
+  const payload = {
+    ID_Programa: idPrograma,
+    Fecha: document.getElementById('asisFecha').value || hoyISO(),
+    Inscritos: document.getElementById('asisInscritos').value,
+    Asistentes: document.getElementById('asisAsistentes').value,
+    Bajas: document.getElementById('asisBajas').value
+  };
+  const btn = document.getElementById('btnGuardarAsistencia');
+  btn.disabled = true;
+  try {
+    await apiPost('addAsistencia', payload);
+    showToast('Asistencia registrada correctamente.');
+    document.getElementById('asisInscritos').value = 0;
+    document.getElementById('asisAsistentes').value = 0;
+    document.getElementById('asisBajas').value = 0;
+    loadProgramas();
+  } catch(err){
+    showToast('Error al registrar asistencia: '+err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function saveSatisfaccion(){
+  const idPrograma = document.getElementById('satPrograma').value;
+  if (!idPrograma) { showToast('Selecciona un programa antes de registrar la satisfacción.'); return; }
+  const payload = {
+    ID_Programa: idPrograma,
+    Fecha: document.getElementById('satFecha').value || hoyISO(),
+    PuntajePromedio: document.getElementById('satPuntaje').value,
+    NumEncuestas: document.getElementById('satNum').value
+  };
+  const btn = document.getElementById('btnGuardarSatisfaccion');
+  btn.disabled = true;
+  try {
+    await apiPost('addSatisfaccion', payload);
+    showToast('Satisfacción registrada correctamente.');
+    loadProgramas();
+  } catch(err){
+    showToast('Error al registrar satisfacción: '+err.message);
+  } finally {
+    btn.disabled = false;
   }
 }
 
