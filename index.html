@@ -249,7 +249,7 @@ textarea{width:100%;min-height:100px;resize:vertical}
   <div class="sidebar-footer">
     Prototipo académico funcional<br>
     Instituto Municipal para el Desarrollo Deportivo<br>
-    v2.0
+    v2.0 · conectado a Google Sheets
   </div>
 </aside>
 
@@ -571,14 +571,38 @@ textarea{width:100%;min-height:100px;resize:vertical}
         <option value="alto">Alto rendimiento</option>
         <option value="formativo">Formativo</option>
       </select>
+      <button class="btn btn-gold" onclick="openProgramForm()">+ Registrar programa</button>
+    </div>
+  </div>
+
+  <div class="card" id="programForm" style="display:none;margin-bottom:16px">
+    <h3 style="font-size:15px;margin-top:0" id="programFormTitle">Nuevo programa</h3>
+    <input type="hidden" id="pEditId" value="">
+    <div class="decision-form">
+      <div class="full"><label>Nombre del programa</label><input id="pNombre" style="width:100%" placeholder="Ej. Judo Municipal"></div>
+      <div>
+        <label>Categoría</label>
+        <select id="pCategoria"><option>Formativo</option><option>Alto rendimiento</option></select>
+      </div>
+      <div>
+        <label>Estado</label>
+        <select id="pEstado"><option>Activo</option><option>Inactivo</option></select>
+      </div>
+      <div><label>Instalación</label><input id="pInstalacion" style="width:100%" placeholder="Ej. Gimnasio Municipal 3"></div>
+      <div><label>Entrenador</label><input id="pEntrenador" style="width:100%" placeholder="Nombre del entrenador"></div>
+      <div><label>Capacidad instalada</label><input id="pCapacidad" type="number" min="0" value="50"></div>
+      <div>
+        <button class="btn btn-primary" id="btnGuardarPrograma" onclick="savePrograma()">Guardar programa</button>
+        <button class="btn btn-light" onclick="closeProgramForm()">Cancelar</button>
+      </div>
     </div>
   </div>
 
   <div class="card table-wrap">
     <table>
-      <thead><tr><th>Programa</th><th>Categoría</th><th>Participantes</th><th>Retención</th><th>Satisfacción</th><th>Riesgo</th></tr></thead>
+      <thead><tr><th>Programa</th><th>Categoría</th><th>Participantes</th><th>Retención</th><th>Satisfacción</th><th>Riesgo</th><th>Acciones</th></tr></thead>
       <tbody id="programTable">
-        <tr><td colspan="6" class="empty-state">Cargando programas...</td></tr>
+        <tr><td colspan="7" class="empty-state">Cargando programas...</td></tr>
       </tbody>
     </table>
   </div>
@@ -1048,7 +1072,8 @@ async function saveDecision(){
 // ---------------------------------------------------------------------------
 // PROGRAMAS
 // ---------------------------------------------------------------------------
-let programasCache = [];
+let programasCache = [];       // catálogo con métricas calculadas (getProgramas)
+let programasCatalogoCache = []; // catálogo crudo (getProgramas trae los mismos campos base, se reutiliza para editar)
 
 function badgeRiesgo(r){ return r==='Alto'?'red':(r==='Medio'?'yellow':'green'); }
 function categoriaKey(c){ return c==='Alto rendimiento' ? 'alto' : 'formativo'; }
@@ -1057,14 +1082,18 @@ function renderProgramas(lista, filtro){
   const tbody = document.getElementById('programTable');
   const filtrados = lista.filter(p => filtro==='all' || categoriaKey(p.Categoria)===filtro);
   if (!filtrados.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Sin programas para este filtro.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Sin programas para este filtro.</td></tr>';
     return;
   }
   tbody.innerHTML = filtrados.map(p =>
     '<tr data-type="'+categoriaKey(p.Categoria)+'"><td>'+p.Nombre+'</td><td>'+p.Categoria+'</td><td>'+p.Participantes+'</td>'
     + '<td>'+(p.Retencion!==null?p.Retencion+'%':'—')+'</td>'
     + '<td>'+(p.Satisfaccion!==null?p.Satisfaccion+'%':'—')+'</td>'
-    + '<td><span class="badge '+badgeRiesgo(p.Riesgo)+'">'+p.Riesgo+'</span></td></tr>'
+    + '<td><span class="badge '+badgeRiesgo(p.Riesgo)+'">'+p.Riesgo+'</span></td>'
+    + '<td style="display:flex;gap:6px">'
+    + '<button class="btn btn-light" onclick="openProgramForm(\''+p.ID_Programa+'\')">Editar</button>'
+    + '<button class="btn btn-light" onclick="removePrograma(\''+p.ID_Programa+'\',\''+p.Nombre.replace(/'/g,"\\'")+'\')">Eliminar</button>'
+    + '</td></tr>'
   ).join('');
 }
 
@@ -1086,7 +1115,85 @@ async function loadProgramas(){
     document.getElementById('kpiRetencionProm').textContent = retVals.length? (retVals.reduce((a,b)=>a+b,0)/retVals.length).toFixed(1)+'%':'—';
     document.getElementById('kpiSatisfaccionProm').textContent = satVals.length? (satVals.reduce((a,b)=>a+b,0)/satVals.length).toFixed(1)+'%':'—';
   } catch(err){
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error al cargar programas: '+err.message+'</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Error al cargar programas: '+err.message+'</td></tr>';
+  }
+}
+
+// ---- Alta / edición / baja del catálogo de programas ----
+function openProgramForm(id){
+  const form = document.getElementById('programForm');
+  const editId = document.getElementById('pEditId');
+  if (id) {
+    const p = programasCache.find(x => x.ID_Programa === id);
+    document.getElementById('programFormTitle').textContent = 'Editar programa';
+    editId.value = id;
+    document.getElementById('pNombre').value = p ? p.Nombre : '';
+    document.getElementById('pCategoria').value = p ? p.Categoria : 'Formativo';
+    document.getElementById('pInstalacion').value = p ? (p.Instalacion||'') : '';
+    document.getElementById('pEntrenador').value = p ? (p.Entrenador||'') : '';
+    document.getElementById('pEstado').value = p ? (p.Estado||'Activo') : 'Activo';
+    document.getElementById('pCapacidad').value = p ? (p.CapacidadInstalada||0) : '';
+  } else {
+    document.getElementById('programFormTitle').textContent = 'Nuevo programa';
+    editId.value = '';
+    document.getElementById('pNombre').value = '';
+    document.getElementById('pCategoria').value = 'Formativo';
+    document.getElementById('pInstalacion').value = '';
+    document.getElementById('pEntrenador').value = '';
+    document.getElementById('pEstado').value = 'Activo';
+    document.getElementById('pCapacidad').value = 50;
+  }
+  form.style.display = 'block';
+  document.getElementById('pNombre').focus();
+}
+
+function closeProgramForm(){
+  document.getElementById('programForm').style.display = 'none';
+}
+
+async function savePrograma(){
+  const id = document.getElementById('pEditId').value;
+  const nombre = document.getElementById('pNombre').value.trim();
+  if (!nombre) { showToast('El nombre del programa es obligatorio.'); return; }
+
+  const payload = {
+    Nombre: nombre,
+    Categoria: document.getElementById('pCategoria').value,
+    Instalacion: document.getElementById('pInstalacion').value.trim(),
+    Entrenador: document.getElementById('pEntrenador').value.trim(),
+    Estado: document.getElementById('pEstado').value,
+    CapacidadInstalada: document.getElementById('pCapacidad').value
+  };
+
+  const btn = document.getElementById('btnGuardarPrograma');
+  btn.disabled = true;
+  try {
+    if (id) {
+      payload.ID_Programa = id;
+      await apiPost('updatePrograma', payload);
+      showToast('Programa actualizado correctamente.');
+    } else {
+      await apiPost('addPrograma', payload);
+      showToast('Programa registrado correctamente.');
+    }
+    closeProgramForm();
+    loadProgramas();
+  } catch(err){
+    showToast('Error al guardar el programa: '+err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function removePrograma(id, nombre){
+  const confirmar = window.confirm('¿Eliminar el programa "'+nombre+'"? Esta acción no se puede deshacer. Si el programa ya tiene historial de asistencia o satisfacción, esos registros quedarán sin catálogo asociado; si solo quieres pausarlo, usa "Editar" y cambia su Estado a Inactivo.');
+  if (!confirmar) return;
+  try {
+    await apiPost('deletePrograma', {ID_Programa:id});
+    showToast('Programa eliminado.');
+    loadProgramas();
+  } catch(err){
+    showToast('Error al eliminar: '+err.message);
   }
 }
 
